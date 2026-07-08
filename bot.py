@@ -13,6 +13,8 @@ from aiogram.types import (
     Message,
 )
 
+from config import ADMIN_ID, BOT_TOKEN, GROUP_LINK, RULES_TEXT, WISHLIST_LINK
+
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(BOT_TOKEN)
