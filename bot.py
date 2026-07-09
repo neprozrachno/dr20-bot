@@ -3,6 +3,7 @@ import logging
 import os
 
 from aiogram import Bot, Dispatcher, F, Router
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -23,7 +24,7 @@ WISHLIST_LINK = os.getenv("WISHLIST_LINK", "бурмалда")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "бурмалда"))
 
 RULES_TEXT = (
-    "**правила нах:<**\n"
+    "правила нах:\n"
     "1. блевать запрещено!! ⛔️ \n"
     "2. драться тоже запрещено \n"
     "3. ломать чето тоже пожалуйста не надо \n"
@@ -96,10 +97,11 @@ async def process_stay(callback: CallbackQuery, state: FSMContext):
 
     await callback.message.delete()
     await asyncio.sleep(MESSAGE_DELAY)
-    await callback.message.answer(
+    food_question = await callback.message.answer(
         "ээээ, пожелания по еде будут какиенить? шашлык 100% будэ, "
         "салатики бурмалдатики мб, пиццо + алисо сосисо в тесте"
     )
+    await state.update_data(food_question_id=food_question.message_id)
     await state.set_state(Form.food_wishes)
     await callback.answer()
 
@@ -109,13 +111,21 @@ async def process_food_wishes(message: Message, state: FSMContext):
     await state.update_data(food_wishes=message.text)
     data = await state.get_data()
 
+    food_question_id = data.get("food_question_id")
+    if food_question_id:
+        try:
+            await bot.delete_message(message.chat.id, food_question_id)
+        except TelegramBadRequest:
+            pass
+
     if data.get("drink") == "yes":
         await asyncio.sleep(MESSAGE_DELAY)
-        await message.answer(
+        alcohol_question = await message.answer(
             "УРААААААААААА!!!!🎉🎉 а что именно хош выпить? любые пожелания "
             "(+ будет велком дринк, его обязательно надо будэ выпить! "
             "(или отправь «-», если пожеланий нет или придёшь сос воим)"
         )
+        await state.update_data(alcohol_question_id=alcohol_question.message_id)
         await state.set_state(Form.alcohol_wishes)
     else:
         await finish_form(message, state)
@@ -124,8 +134,16 @@ async def process_food_wishes(message: Message, state: FSMContext):
 @router.message(Form.alcohol_wishes)
 async def process_alcohol_wishes(message: Message, state: FSMContext):
     await state.update_data(alcohol_wishes=message.text)
-    await finish_form(message, state)
+    data = await state.get_data()
 
+    alcohol_question_id = data.get("alcohol_question_id")
+    if alcohol_question_id:
+        try:
+            await bot.delete_message(message.chat.id, alcohol_question_id)
+        except TelegramBadRequest:
+            pass
+
+    await finish_form(message, state)
 
 async def finish_form(message: Message, state: FSMContext):
     data = await state.get_data()
