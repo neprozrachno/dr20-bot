@@ -14,16 +14,16 @@ from aiogram.types import (
     Message,
 )
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "бабубэ")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "бурмалда")
 
-GROUP_LINK = os.getenv("GROUP_LINK", "бабубэ")
+GROUP_LINK = os.getenv("GROUP_LINK", "бурмалда")
 
-WISHLIST_LINK = os.getenv("WISHLIST_LINK", "бабубэ")
+WISHLIST_LINK = os.getenv("WISHLIST_LINK", "бурмалда")
 
-ADMIN_ID = int(os.getenv("ADMIN_ID", "бабубэ"))
+ADMIN_ID = int(os.getenv("ADMIN_ID", "бурмалда"))
 
 RULES_TEXT = (
-    "<b>правила нах:</b>\n"
+    "**правила нах:<**\n"
     "1. блевать запрещено!! ⛔️ \n"
     "2. драться тоже запрещено \n"
     "3. ломать чето тоже пожалуйста не надо \n"
@@ -32,6 +32,8 @@ RULES_TEXT = (
     "6. чёто еще\n"
     "7. итд"
 )
+
+MESSAGE_DELAY = 1.5
 
 logging.basicConfig(level=logging.INFO)
 
@@ -52,8 +54,8 @@ def yes_no_kb(prefix: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="Да", callback_data=f"{prefix}:yes"),
-                InlineKeyboardButton(text="Нет", callback_data=f"{prefix}:no"),
+                InlineKeyboardButton(text="ДА!!1!", callback_data=f"{prefix}:yes"),
+                InlineKeyboardButton(text="нет....", callback_data=f"{prefix}:no"),
             ]
         ]
     )
@@ -67,6 +69,7 @@ async def cmd_start(message: Message, state: FSMContext):
         "я оч рада, что ты будешь на моем дэрэ :)\n"
         "ответь, пожалуйста, на пару вопросов, чтобы я подготовила всё как надо"
     )
+    await asyncio.sleep(MESSAGE_DELAY)
     await message.answer("ты пьёшь алкоголь?🤔🤔🥂🍷🍾", reply_markup=yes_no_kb("drink"))
     await state.set_state(Form.drink)
 
@@ -76,7 +79,8 @@ async def process_drink(callback: CallbackQuery, state: FSMContext):
     answer = callback.data.split(":")[1]
     await state.update_data(drink=answer)
 
-    await callback.message.edit_reply_markup(reply_markup=None)
+    await callback.message.delete()
+    await asyncio.sleep(MESSAGE_DELAY)
     await callback.message.answer(
         "а останешься на ночь?🥺🥺🥺😴😴 (кол-во мест ограничено, возможно придётся ютиться!!)",
         reply_markup=yes_no_kb("stay"),
@@ -90,7 +94,8 @@ async def process_stay(callback: CallbackQuery, state: FSMContext):
     answer = callback.data.split(":")[1]
     await state.update_data(stay=answer)
 
-    await callback.message.edit_reply_markup(reply_markup=None)
+    await callback.message.delete()
+    await asyncio.sleep(MESSAGE_DELAY)
     await callback.message.answer(
         "ээээ, пожелания по еде будут какиенить? шашлык 100% будэ, "
         "салатики бурмалдатики мб, пиццо + алисо сосисо в тесте"
@@ -105,6 +110,7 @@ async def process_food_wishes(message: Message, state: FSMContext):
     data = await state.get_data()
 
     if data.get("drink") == "yes":
+        await asyncio.sleep(MESSAGE_DELAY)
         await message.answer(
             "УРААААААААААА!!!!🎉🎉 а что именно хош выпить? любые пожелания "
             "(+ будет велком дринк, его обязательно надо будэ выпить! "
@@ -133,6 +139,7 @@ async def finish_form(message: Message, state: FSMContext):
         f"{RULES_TEXT}\n\n"
         "другую нужную инфу буду писать уже в беседе, а так буду ждать на тусе <3"
     )
+    await asyncio.sleep(MESSAGE_DELAY)
     await message.answer(final_text, disable_web_page_preview=True)
 
     await notify_admin(message.from_user, data)
@@ -143,22 +150,22 @@ async def notify_admin(user, data: dict):
     username = f"@{user.username}" if user.username else "(без username)"
     full_name = user.full_name
 
-    drink_text = "Пьёт 🍷" if data.get("drink") == "yes" else "Не пьёт 🚫"
-    stay_text = "Остаётся на ночь 🌙" if data.get("stay") == "yes" else "Не остаётся"
+    drink_text = "пьёт" if data.get("drink") == "yes" else "не пьет"
+    stay_text = остается на ночь" if data.get("stay") == "yes" else "не остается"
     food_wishes = data.get("food_wishes") or "-"
     alcohol_wishes = data.get("alcohol_wishes")
 
     text = (
-        "📩 <b>Новый ответ гостя</b>\n\n"
-        f"Имя: {full_name}\n"
-        f"Username: {username}\n"
-        f"ID: {user.id}\n\n"
+        "новый ответ гостя:\n\n"
+        f"имя: {full_name}\n"
+        f"юзер: {username}\n"
+        f"айди: {user.id}\n\n"
         f"{drink_text}\n"
         f"{stay_text}\n"
-        f"Пожелания по еде: {food_wishes}\n"
+        f"пожелания по еде: {food_wishes}\n"
     )
     if alcohol_wishes is not None:
-        text += f"Пожелания по алкоголю: {alcohol_wishes}\n"
+        text += f"пожелания по алко: {alcohol_wishes}\n"
 
     await bot.send_message(ADMIN_ID, text)
 
