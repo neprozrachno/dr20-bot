@@ -14,15 +14,13 @@ from aiogram.types import (
     Message,
 )
 
-# ==================== НАСТРОЙКИ БОТА ====================
+BOT_TOKEN = os.getenv("BOT_TOKEN", "бабубэ")
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8790030605:AAHotRsdKnlTNDREztgCyNCysx8UZzP1xxk")
+GROUP_LINK = os.getenv("GROUP_LINK", "бабубэ")
 
-GROUP_LINK = os.getenv("GROUP_LINK", "https://t.me/+FOmfopugnRJlY2Zi")
+WISHLIST_LINK = os.getenv("WISHLIST_LINK", "бабубэ")
 
-WISHLIST_LINK = os.getenv("WISHLIST_LINK", "https://web-production-a6c04.up.railway.app/wishlists/11/")
-
-ADMIN_ID = int(os.getenv("ADMIN_ID", "1857155854"))
+ADMIN_ID = int(os.getenv("ADMIN_ID", "бабубэ"))
 
 RULES_TEXT = (
     "<b>правила нах:</b>\n"
@@ -30,11 +28,10 @@ RULES_TEXT = (
     "2. драться тоже запрещено \n"
     "3. ломать чето тоже пожалуйста не надо \n"
     "4. с собой обязательно хорошее настроение!!!!!😍😍😍😍 \n"
-    "5. ээээ"
-    "6. чёто еще"
+    "5. ээээ\n"
+    "6. чёто еще\n"
     "7. итд"
 )
-# ==========================================================
 
 logging.basicConfig(level=logging.INFO)
 
@@ -81,7 +78,8 @@ async def process_drink(callback: CallbackQuery, state: FSMContext):
 
     await callback.message.edit_reply_markup(reply_markup=None)
     await callback.message.answer(
-        "а останешься на ночь?🥺🥺🥺😴😴 (кол-во мест ограничено, возможно придётся ютиться!!)", reply_markup=yes_no_kb("stay")
+        "а останешься на ночь?🥺🥺🥺😴😴 (кол-во мест ограничено, возможно придётся ютиться!!)",
+        reply_markup=yes_no_kb("stay"),
     )
     await state.set_state(Form.stay)
     await callback.answer()
@@ -94,7 +92,8 @@ async def process_stay(callback: CallbackQuery, state: FSMContext):
 
     await callback.message.edit_reply_markup(reply_markup=None)
     await callback.message.answer(
-        "ээээ, пожелания по еде будут какиенить? шашлык 100% будэ, салатики бурмалдатики мб, пиццо + алисо сосисо в тесте"
+        "ээээ, пожелания по еде будут какиенить? шашлык 100% будэ, "
+        "салатики бурмалдатики мб, пиццо + алисо сосисо в тесте"
     )
     await state.set_state(Form.food_wishes)
     await callback.answer()
@@ -107,7 +106,8 @@ async def process_food_wishes(message: Message, state: FSMContext):
 
     if data.get("drink") == "yes":
         await message.answer(
-            "УРААААААААААА!!!!🎉🎉 а что именно хош выпить? любые пожелания (+ будет велком дринк, его обязательно надо будэ выпить!"
+            "УРААААААААААА!!!!🎉🎉 а что именно хош выпить? любые пожелания "
+            "(+ будет велком дринк, его обязательно надо будэ выпить! "
             "(или отправь «-», если пожеланий нет или придёшь сос воим)"
         )
         await state.set_state(Form.alcohol_wishes)
@@ -129,7 +129,7 @@ async def finish_form(message: Message, state: FSMContext):
         f"беседа: {GROUP_LINK}\n\n"
         f"мой вишлист: {WISHLIST_LINK}\n"
         f"(пс: большая просьба зарегаться там и забронировать подарок :)\n"
-        f"если ничего не приглянулось, то дари как знаешь, мне в любом случае приятно будет!"
+        f"если ничего не приглянулось, то дари как знаешь, мне в любом случае приятно будет!\n\n"
         f"{RULES_TEXT}\n\n"
         "другую нужную инфу буду писать уже в беседе, а так буду ждать на тусе <3"
     )
