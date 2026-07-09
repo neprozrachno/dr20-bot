@@ -151,7 +151,7 @@ async def notify_admin(user, data: dict):
     full_name = user.full_name
 
     drink_text = "пьёт" if data.get("drink") == "yes" else "не пьет"
-    stay_text = остается на ночь" if data.get("stay") == "yes" else "не остается"
+    stay_text = 'остается на ночь" if data.get("stay") == "yes" else "не остается"
     food_wishes = data.get("food_wishes") or "-"
     alcohol_wishes = data.get("alcohol_wishes")
 
