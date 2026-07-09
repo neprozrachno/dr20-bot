@@ -1,6 +1,6 @@
 import os
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "бабубэ")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8790030605:AAHotRsdKnlTNDREztgCyNCysx8UZzP1xxk")
 
 GROUP_LINK = os.getenv("GROUP_LINK", "https://t.me/+FOmfopugnRJlY2Zi")
 
