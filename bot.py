@@ -1,10 +1,11 @@
 import asyncio
+import json
 import logging
 import os
 
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.filters import CommandStart
+from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -16,11 +17,8 @@ from aiogram.types import (
 )
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "бурмалда")
-
 GROUP_LINK = os.getenv("GROUP_LINK", "бурмалда")
-
 WISHLIST_LINK = os.getenv("WISHLIST_LINK", "бурмалда")
-
 ADMIN_ID = int(os.getenv("ADMIN_ID", "бурмалда"))
 
 RULES_TEXT = (
@@ -36,12 +34,32 @@ RULES_TEXT = (
 
 MESSAGE_DELAY = 1.5
 
+KNOWN_USERS_FILE = "known_users.json"
+
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 router = Router()
 dp.include_router(router)
+
+
+def load_known_users() -> set[int]:
+    if not os.path.exists(KNOWN_USERS_FILE):
+        return set()
+    try:
+        with open(KNOWN_USERS_FILE, "r", encoding="utf-8") as f:
+            return set(json.load(f))
+    except (json.JSONDecodeError, OSError):
+        return set()
+
+
+def save_known_user(user_id: int) -> None:
+    users = load_known_users()
+    if user_id not in users:
+        users.add(user_id)
+        with open(KNOWN_USERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(list(users), f)
 
 
 class Form(StatesGroup):
@@ -65,6 +83,7 @@ def yes_no_kb(prefix: str) -> InlineKeyboardMarkup:
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext):
     await state.clear()
+    save_known_user(message.from_user.id)
     await message.answer(
         f"привет, {message.from_user.first_name}!!!\n"
         "я оч рада, что ты будешь на моем дэрэ :)\n"
@@ -145,6 +164,7 @@ async def process_alcohol_wishes(message: Message, state: FSMContext):
 
     await finish_form(message, state)
 
+
 async def finish_form(message: Message, state: FSMContext):
     data = await state.get_data()
 
@@ -186,6 +206,31 @@ async def notify_admin(user, data: dict):
         text += f"пожелания по алко: {alcohol_wishes}\n"
 
     await bot.send_message(ADMIN_ID, text)
+
+
+@router.message(Command("broadcast"))
+async def cmd_broadcast(message: Message):
+    if message.from_user.id != ADMIN_ID:
+        return 
+
+    text = message.text.removeprefix("/broadcast").strip()
+    if not text:
+        await message.answer(
+            "Напиши текст после команды, например:\n/broadcast Не забудьте купальники!"
+        )
+        return
+
+    users = load_known_users()
+    sent, failed = 0, 0
+    for user_id in users:
+        try:
+            await bot.send_message(user_id, text)
+            sent += 1
+        except TelegramBadRequest:
+            failed += 1
+        await asyncio.sleep(0.05)
+
+    await message.answer(f"Рассылка отправлена. Успешно: {sent}, не доставлено: {failed}")
 
 
 async def main():
